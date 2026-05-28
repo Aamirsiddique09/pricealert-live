@@ -1,6 +1,5 @@
-// search.js — Updated with WHATWG URL API
+// search.js — Fully modern with WHATWG URL API
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -13,7 +12,6 @@ export default async function handler(req, res) {
   if (!q) return res.status(400).json({ error: "Query required" });
 
   const apiKey = process.env.SERP_API_KEY;
-
   if (!apiKey) {
     return res.status(500).json({ error: "API key not configured on server" });
   }
