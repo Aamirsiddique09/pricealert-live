@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://pricealert.live/sitemap.xml
+
+# Block admin
+Disallow: /admin
