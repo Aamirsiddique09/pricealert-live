@@ -1,8 +1,4 @@
-// ═══════════════════════════════════════════════════════
-// Vercel Serverless Function — SerpAPI Proxy
-// SerpAPI key stays on SERVER — never exposed to browser
-// ═══════════════════════════════════════════════════════
-
+// search.js — Updated with WHATWG URL API
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -16,7 +12,6 @@ export default async function handler(req, res) {
 
   if (!q) return res.status(400).json({ error: "Query required" });
 
-  // Key is SERVER-SIDE only — no VITE_ prefix — safe!
   const apiKey = process.env.SERP_API_KEY;
 
   if (!apiKey) {
@@ -24,30 +19,37 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(q)}&gl=${gl || "us"}&hl=${hl || "en"}&api_key=${apiKey}`;
-    const response = await fetch(url);
+    // ✅ Modern WHATWG URL API
+    const apiUrl = new URL('https://serpapi.com/search.json');
+    apiUrl.searchParams.set('engine', 'google_shopping');
+    apiUrl.searchParams.set('q', q);
+    apiUrl.searchParams.set('gl', gl || 'us');
+    apiUrl.searchParams.set('hl', hl || 'en');
+    apiUrl.searchParams.set('api_key', apiKey);
+
+    const response = await fetch(apiUrl.toString());
     const data = await response.json();
 
     if (data.error) {
       return res.status(400).json({ error: data.error });
     }
 
-    // Only send what frontend needs — strip sensitive data
     const results = (data.shopping_results || []).map(item => ({
-      title:           item.title,
-      price:           item.price,
+      title: item.title,
+      price: item.price,
       extracted_price: item.extracted_price,
-      source:          item.source,
-      link:            item.link,
-      thumbnail:       item.thumbnail,
-      rating:          item.rating,
-      reviews:         item.reviews,
-      delivery:        item.delivery,
-      badge:           item.badge,
+      source: item.source,
+      link: item.link,
+      thumbnail: item.thumbnail,
+      rating: item.rating,
+      reviews: item.reviews,
+      delivery: item.delivery,
+      badge: item.badge,
     }));
 
     return res.status(200).json({ results });
   } catch (err) {
+    console.error('Search error:', err);
     return res.status(500).json({ error: "Search failed. Try again." });
   }
 }
